@@ -6,6 +6,7 @@ todo-ai functionality to AI agents and other MCP clients.
 
 import argparse
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -17,7 +18,7 @@ from todo_ai.models import TaskStatus
 
 
 @asynccontextmanager
-async def lifespan(mcp: FastMCP) -> Any:  # type: ignore[type-arg]
+async def lifespan(mcp: FastMCP) -> AsyncIterator[dict[str, TodoList]]:
     """Lifespan context manager for the MCP server."""
     # Get configuration from environment variables
     strategy = os.environ.get("TODO_AI_STRATEGY", "memory")
@@ -57,7 +58,8 @@ mcp = FastMCP(
 def _get_todo_list() -> TodoList:
     """Get the todo list from the current context."""
     ctx = mcp.get_context()
-    return ctx.request_context.lifespan_context["todo_list"]  # type: ignore[return-value]
+    todo_list: TodoList = ctx.request_context.lifespan_context["todo_list"]
+    return todo_list
 
 
 @mcp.tool()
